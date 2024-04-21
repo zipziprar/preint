@@ -23,8 +23,10 @@ class CommandRunner:
 
     def _run_command(self, thread_number):
         # its better to pass assembled command object to this function for flexibility
+        duration = self.duration[thread_number]
+
         output_file = os.path.join(self.output_dir, f'output_{thread_number}.txt')
-        command = f"docker exec some-scylla cassandra-stress write duration={self.duration}s -rate " \
+        command = f"docker exec some-scylla cassandra-stress write duration={duration}s -rate " \
                   f"threads={self.cassandra_threads} -node {self.node_ip}"
 
         with open(output_file, 'w') as file:
@@ -118,9 +120,15 @@ def main():
     parser = argparse.ArgumentParser(description="Run and analyze Cassandra Stress Tests")
     parser.add_argument('--node_ip', type=str, required=True, help="Node IP to run stress command")
     parser.add_argument('--threads', type=int, default=5, help="Number of concurrent threads for the stress tests")
-    parser.add_argument('--duration', type=int, default=10, help="Duration for each stress test in seconds")
+    parser.add_argument('--duration', type=str, required=True,
+                        help="Comma-separated list of durations for each stress command in seconds")
     parser.add_argument('--cassandra_threads', type=int, default=10, help="Number of threads per Cassandra stress command")
     args = parser.parse_args()
+
+    durations = [int(dur) for dur in args.duration.split(',')]
+    if len(durations) != args.threads:
+        print(f"Error: Number of durations: {len(durations)}, dont match with number of threads: {args.threads}.")
+        return
 
     runner = CommandRunner(args.node_ip, args.duration, args.cassandra_threads)
     log_files = runner.run_stress_tests(args.threads)
