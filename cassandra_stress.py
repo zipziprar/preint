@@ -130,17 +130,12 @@ def main():
         print(f"Error: Number of durations: {len(durations)}, dont match with number of threads: {args.threads}.")
         return
 
-    runner = CommandRunner(args.node_ip, args.duration, args.cassandra_threads)
+    runner = CommandRunner(args.node_ip, durations, args.cassandra_threads)
     log_files = runner.run_stress_tests(args.threads)
     aggregator = SummaryAggregator(log_files)
     summary = aggregator.aggregate()
     aggregator.print_summary(summary)
 
-    # runner = CommandRunner('172.17.0.2', '10', '5')
-    # log_files = runner.run_stress_tests(5)
-    # aggregator = SummaryAggregator(log_files)
-    # summary = aggregator.aggregate()
-    # aggregator.print_summary(summary)
 
 if __name__ == "__main__":
     main()
